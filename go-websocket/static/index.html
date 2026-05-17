@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Antifraude Dashboard</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: #0a0a0f;
+      color: #e0e0e0;
+      font-family: 'Courier New', monospace;
+      padding: 24px;
+    }
+
+    h1 {
+      text-align: center;
+      font-size: 22px;
+      color: #00ff88;
+      margin-bottom: 24px;
+      letter-spacing: 4px;
+    }
+
+    .containers {
+      display: flex;
+      gap: 16px;
+      justify-content: center;
+      margin-bottom: 32px;
+    }
+
+    .container-card {
+      background: #111118;
+      border: 1px solid #222;
+      border-radius: 12px;
+      padding: 16px 24px;
+      text-align: center;
+      min-width: 160px;
+    }
+
+    .container-card .label {
+      font-size: 11px;
+      color: #888;
+      letter-spacing: 2px;
+      margin-bottom: 8px;
+    }
+
+    .container-card .status {
+      font-size: 13px;
+      font-weight: bold;
+    }
+
+    .pulse {
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #00ff88;
+      margin-right: 8px;
+      animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.8); }
+    }
+
+    .stats {
+      display: flex;
+      gap: 16px;
+      justify-content: center;
+      margin-bottom: 32px;
+    }
+
+    .stat {
+      background: #111118;
+      border: 1px solid #222;
+      border-radius: 12px;
+      padding: 16px 32px;
+      text-align: center;
+    }
+
+    .stat .numero {
+      font-size: 36px;
+      font-weight: bold;
+    }
+
+    .stat .descricao {
+      font-size: 11px;
+      color: #888;
+      letter-spacing: 2px;
+      margin-top: 4px;
+    }
+
+    .aprovadas .numero { color: #00ff88; }
+    .fraudes .numero { color: #ff4455; }
+    .total .numero { color: #4488ff; }
+
+    .feed {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    .feed-title {
+      font-size: 11px;
+      color: #888;
+      letter-spacing: 3px;
+      margin-bottom: 12px;
+    }
+
+    .transacao {
+      background: #111118;
+      border-left: 3px solid #333;
+      border-radius: 8px;
+      padding: 12px 16px;
+      margin-bottom: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      animation: slideIn 0.3s ease;
+    }
+
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateX(-16px); }
+      to   { opacity: 1; transform: translateX(0); }
+    }
+
+    .transacao.aprovada { border-left-color: #00ff88; }
+    .transacao.fraude   { border-left-color: #ff4455; }
+    .transacao.entrada  { border-left-color: #4488ff; }
+
+    .transacao .info { font-size: 13px; }
+    .transacao .adquirente { font-weight: bold; margin-bottom: 4px; }
+    .transacao .detalhe { font-size: 11px; color: #888; }
+
+    .badge {
+      font-size: 11px;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-weight: bold;
+      letter-spacing: 1px;
+    }
+
+    .badge.aprovada { background: #00ff8822; color: #00ff88; }
+    .badge.fraude   { background: #ff445522; color: #ff4455; }
+    .badge.entrada  { background: #4488ff22; color: #4488ff; }
+  </style>
+</head>
+<body>
+
+  <h1>⬡ ANTIFRAUDE SYSTEM</h1>
+
+  <div class="containers">
+    <div class="container-card">
+      <div class="label">RUST INSTANCE</div>
+      <div class="status"><span class="pulse"></span>Container 1</div>
+    </div>
+    <div class="container-card">
+      <div class="label">RUST INSTANCE</div>
+      <div class="status"><span class="pulse" style="animation-delay: 0.5s"></span>Container 2</div>
+    </div>
+  </div>
+
+  <div class="stats">
+    <div class="stat total">
+      <div class="numero" id="total">0</div>
+      <div class="descricao">TOTAL</div>
+    </div>
+    <div class="stat aprovadas">
+      <div class="numero" id="aprovadas">0</div>
+      <div class="descricao">APROVADAS</div>
+    </div>
+    <div class="stat fraudes">
+      <div class="numero" id="fraudes">0</div>
+      <div class="descricao">FRAUDES</div>
+    </div>
+  </div>
+
+  <div class="feed">
+    <div class="feed-title">FEED DE TRANSAÇÕES</div>
+    <div id="lista"></div>
+  </div>
+
+  <script>
+    let total = 0, aprovadas = 0, fraudes = 0;
+
+    const evtSource = new EventSource("http://localhost:8081/eventos");
+
+    evtSource.onmessage = function(e) {
+      const evento = JSON.parse(e.data);
+      const payload = JSON.parse(evento.payload);
+      const tipo = evento.tipo;
+
+      if (tipo === "aprovada") {
+        aprovadas++;
+        total++;
+      } else if (tipo === "fraude") {
+        fraudes++;
+        total++;
+      }
+
+      document.getElementById("total").textContent = total;
+      document.getElementById("aprovadas").textContent = aprovadas;
+      document.getElementById("fraudes").textContent = fraudes;
+
+      const lista = document.getElementById("lista");
+      const card = document.createElement("div");
+      card.className = `transacao ${tipo}`;
+
+      const adquirente = payload.adquirente || payload.Adquirente || "—";
+      const valor = payload.valor || payload.Valor || 0;
+      const instancia = payload.instancia || "";
+      const motivo = payload.motivo || "";
+
+      card.innerHTML = `
+        <div class="info">
+          <div class="adquirente">${adquirente.toUpperCase()}</div>
+          <div class="detalhe">R$ ${parseFloat(valor).toFixed(2)} ${instancia ? "· instância " + instancia : ""} ${motivo ? "· " + motivo : ""}</div>
+        </div>
+        <span class="badge ${tipo}">${tipo.toUpperCase()}</span>
+      `;
+
+      lista.insertBefore(card, lista.firstChild);
+
+      if (lista.children.length > 30) {
+        lista.removeChild(lista.lastChild);
+      }
+    };
+  </script>
+
+</body>
+</html>

@@ -1,0 +1,9 @@
+CLAUDE.md
+
+# Kotlin/Gradle
+kotlin-producer/build/
+*.class
+*.jar
+
+# Rust
+rust-antifraude/target/

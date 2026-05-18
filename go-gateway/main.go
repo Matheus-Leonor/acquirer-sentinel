@@ -23,9 +23,10 @@ var writer *kafka.Writer
 
 func main() {
 	writer = &kafka.Writer{
-		Addr:     kafka.TCP("kafka:9092"),
-		Topic:    "transacoes-entrada",
-		Balancer: &kafka.LeastBytes{},
+		Addr:        kafka.TCP("kafka:9092"),
+		Topic:       "transacoes-entrada",
+		Balancer:    &kafka.LeastBytes{},
+		MaxAttempts: 10,
 	}
 	defer writer.Close()
 

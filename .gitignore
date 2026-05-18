@@ -7,3 +7,6 @@ kotlin-producer/build/
 
 # Rust
 rust-antifraude/target/
+
+# Claude Code local settings
+.claude/

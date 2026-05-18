@@ -103,14 +103,16 @@ fn main() {
 
                     let payload_resultado = serde_json::to_string(&resultado).unwrap();
 
-                    producer
-                        .send(&Record::from_value(topico, payload_resultado.as_bytes()))
-                        .expect("Erro ao publicar resultado");
-
-                    println!(
-                        "[Instancia {}] {} | Aprovada: {}",
-                        instancia, transacao.adquirente, !e_fraude
-                    );
+                    match producer.send(&Record::from_value(topico, payload_resultado.as_bytes())) {
+                        Ok(offsets) => println!(
+                            "[Instancia {}] {} | Aprovada: {} | topico: {} | offsets: {:?}",
+                            instancia, transacao.adquirente, !e_fraude, topico, offsets
+                        ),
+                        Err(e) => println!(
+                            "[Instancia {}] ERRO ao publicar em {}: {:?}",
+                            instancia, topico, e
+                        ),
+                    };
                 }
             }
             consumer.consume_messageset(ms).unwrap();

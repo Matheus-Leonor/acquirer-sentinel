@@ -68,11 +68,14 @@ func wsHandler(w http.ResponseWriter, r *http.Request) {
 
 func consumirTopico(topico string, tipo string) {
 	reader := kafka.NewReader(kafka.ReaderConfig{
-		Brokers: []string{"kafka:9092"},
-		Topic:   topico,
-		GroupID: "websocket-" + topico,
+		Brokers:   []string{"kafka:9092"},
+		Topic:     topico,
+		Partition: 0,
+		MinBytes:  1,
+		MaxBytes:  10e6,
 	})
 	defer reader.Close()
+	reader.SetOffset(kafka.LastOffset)
 
 	for {
 		msg, err := reader.ReadMessage(context.Background())

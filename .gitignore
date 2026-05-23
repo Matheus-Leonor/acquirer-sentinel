@@ -10,3 +10,11 @@ rust-antifraude/target/
 
 # Claude Code local settings
 .claude/
+
+# Dashboard build output (generated from dashboard/src)
+go-websocket/static/assets/
+go-websocket/static/index.html
+
+# Node modules
+go-websocket/static/dashboard/node_modules/
+go-websocket/static/dashboard/dist/
